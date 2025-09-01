@@ -1,6 +1,7 @@
 <div class="wrap">
-  <h1>Access Logs</h1>
-  <table class="widefat mt-3">
+  <h1 class="wp-heading-inline">Access Logs</h1>
+    <hr class="wp-header-end">
+    <table class="wp-list-table widefat fixed striped table-view-list posts margin-top-10">
     <thead>
       <tr>
         <th>ID</th>

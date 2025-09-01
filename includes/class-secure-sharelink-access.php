@@ -1,82 +1,111 @@
 <?php
-class ShareLink_Access {
-    public function __construct() {
+
+class ShareLink_Access
+{
+    public function __construct()
+    {
         add_action('template_redirect', [$this, 'handle_request']);
     }
 
-    public function handle_request() {
-        if (empty($_GET['sharelink'])) return;
+    public function handle_request()
+    {
+        if (isset($_GET['sharelink'])) {
+            $token = sanitize_text_field($_GET['sharelink']);
+            $manager = new ShareLink_Manager();
+            $data = $manager->get_link($token);
 
-        $token = sanitize_text_field($_GET['sharelink']);
-        $password = isset($_POST['sharelink_password']) ? sanitize_text_field($_POST['sharelink_password']) : null;
+            if (!$data) {
+                wp_die(__('Invalid or expired share link.', 'sharelink'));
+            }
 
-        $manager = new ShareLink_Manager();
-        $result = $manager->validate_link($token, $password);
+            // Get WP timezone
+            $timezone = wp_timezone();
+            $now      = new DateTime('now', $timezone);
+            $expires  = new DateTime($data['expires_at'], $timezone);
 
-        // If validation failed
-        if (is_wp_error($result)) {
-            $this->render_message($result->get_error_message(), 'error', $token);
+            // Check expiry
+            if ($expires < $now) {
+                wp_die(__('This link has expired.', 'sharelink'));
+            }
+
+            // Check password
+            if (!empty($data['password'])) {
+                $password_input = $_POST['sharelink_password'] ?? null;
+
+                if (empty($password_input) || !wp_check_password($password_input, $data['password'])) {
+                    ShareLink_Logger::log($data['id'], $token, 'wrong_password');
+
+                    get_header();
+
+                    // Locate template (theme override first, plugin fallback)
+                    $template = locate_template('sharelink-password-form.php');
+                    if (!$template) {
+                        $template = plugin_dir_path(__FILE__) . 'templates/sharelink-password-form.php';
+                    }
+
+                    // Pass variable safely (for WP < 5.5 compatibility)
+                    $args = ['password_input' => $password_input];
+                    if (file_exists($template)) {
+                        $this->load_template_with_args($template, $args);
+                    }
+
+                    get_footer();
+                    exit;
+                }
+            }
+
+            // Check IP whitelist
+            if (!empty($data['ip_whitelist'])) {
+                $ips = array_map('trim', explode(',', $data['ip_whitelist']));
+                $user_ip = $_SERVER['REMOTE_ADDR'] ?? '';
+                if (!in_array($user_ip, $ips, true)) {
+                    wp_die(__('Access denied from your IP.', 'sharelink'));
+                }
+            }
+
+            // Check max uses
+            if (!empty($data['max_uses']) && $data['used_count'] >= $data['max_uses']) {
+                wp_die(__('This link has reached its usage limit.', 'sharelink'));
+            }
+
+            // Increment usage
+            $manager->increment_usage($token);
+
+            // Burn after reading
+            if (!empty($data['burn_after_reading'])) {
+                $manager->delete_link($token);
+                ShareLink_Logger::log($data['id'], $token, 'burn_after_reading_deleted');
+            }
+
+            // Log successful access
+            ShareLink_Logger::log($data['id'], $token, 'success');
+
+            // Output the resource
+            get_header();
+
+            // Locate template (theme override first, plugin fallback)
+            $template = locate_template('sharelink-resource.php');
+            if (!$template) {
+                $template = plugin_dir_path(__FILE__) . 'templates/sharelink-resource.php';
+            }
+
+            // Pass variables
+            $args = ['data' => $data];
+            if (file_exists($template)) {
+                $this->load_template_with_args($template, $args);
+            }
+
+            get_footer();
             exit;
         }
-
-        // At this point, access is granted
-        $resource = $result['value'];
-        $type     = $result['type'];
-
-        // Log success
-        ShareLink_Logger::log($result['id'], $token, 'success');
-
-        if ($type === 'file') {
-            $this->serve_file($resource);
-        } elseif ($type === 'route') {
-            wp_redirect(home_url($resource));
-            exit;
-        } elseif ($type === 'data') {
-            $this->render_message(esc_html($resource), 'success');
-        }
-
-        exit;
     }
 
-    private function render_message($message, $status = 'info', $token = null) {
-        get_header();
-        echo '<div class="sharelink-message" style="max-width:600px;margin:80px auto;padding:20px;border:1px solid #ccc;background:#fff;">';
-
-        if ($status === 'error') {
-            echo "<h2 style='color:red;'>Access Denied</h2><p>" . esc_html($message) . "</p>";
-        } elseif ($status === 'success') {
-            echo "<h2>Resource</h2><p>" . $message . "</p>";
-        } else {
-            echo "<p>" . esc_html($message) . "</p>";
+    private function load_template_with_args($template, $args = []) {
+        if (is_array($args)) {
+            extract($args); // makes $password_input available inside template
         }
-
-        // Password form if needed
-        if ($message === 'Password required or invalid' && $token) {
-            echo '<form method="post" style="margin-top:20px;">
-                <label>Enter Password:</label><br>
-                <input type="password" name="sharelink_password">
-                <button type="submit">Access</button>
-            </form>';
-        }
-
-        echo '</div>';
-        get_footer();
-    }
-
-    private function serve_file($file_url) {
-        $file_path = str_replace(site_url('/'), ABSPATH, $file_url);
-
-        if (!file_exists($file_path)) {
-            $this->render_message("File not found.", 'error');
-            exit;
-        }
-
-        header('Content-Description: File Transfer');
-        header('Content-Type: ' . mime_content_type($file_path));
-        header('Content-Disposition: attachment; filename="' . basename($file_path) . '"');
-        header('Content-Length: ' . filesize($file_path));
-
-        readfile($file_path);
-        exit;
+        include $template;
     }
 }
+
+

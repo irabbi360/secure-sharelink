@@ -29,7 +29,7 @@ require_once SHARELINK_DIR . 'includes/class-secure-sharelink-manager.php';
 require_once SHARELINK_DIR . 'includes/class-secure-sharelink-rest.php';
 require_once SHARELINK_DIR . 'admin/class-secure-sharelink-admin.php';
 require_once SHARELINK_DIR . 'includes/class-secure-sharelink-logger.php';
-require_once SHARELINK_DIR . 'includes/test.php';
+require_once SHARELINK_DIR . 'includes/class-secure-sharelink-access.php';
 
 // Activation / Deactivation
 register_activation_hook( __FILE__, array( 'ShareLink_Activator', 'activate' ) );
@@ -56,5 +56,3 @@ add_filter('query_vars', function ($vars) {
     $vars[] = 'sharelink';
     return $vars;
 });
-
-// Handle template rendering
