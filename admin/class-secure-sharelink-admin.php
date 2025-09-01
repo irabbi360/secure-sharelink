@@ -180,7 +180,7 @@ class ShareLink_Admin {
 
         $id = intval($_POST['id']);
         if (!$id) {
-            wp_die(__('Invalid link ID', 'secure-sharelink'));
+            wp_die(esc_html__('Invalid link ID', 'secure-sharelink'));
         }
 
         // Delete the sharelink
