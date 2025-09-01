@@ -37,4 +37,10 @@
         <?php endforeach; ?>
         </tbody>
     </table>
+
+    <?php if (!empty($pagination)) : ?>
+        <div class="tablenav-pages">
+            <?php echo $pagination; ?>
+        </div>
+    <?php endif; ?>
 </div>

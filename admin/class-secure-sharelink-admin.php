@@ -15,9 +15,40 @@ class ShareLink_Admin {
 
     public function dashboard() {
         global $wpdb;
-        $links = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}secure_sharelinks ORDER BY created_at DESC");
+
+        // Pagination variables
+        $per_page = 20;
+        $paged    = isset($_GET['paged']) ? max(1, intval($_GET['paged'])) : 1;
+        $offset   = ($paged - 1) * $per_page;
+
+        // Count total sharelinks
+        $total_links = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}secure_sharelinks");
+
+        // Fetch paginated sharelinks
+        $links = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT * FROM {$wpdb->prefix}secure_sharelinks
+             ORDER BY id DESC
+             LIMIT %d OFFSET %d",
+                $per_page,
+                $offset
+            )
+        );
+
+        // Generate pagination links
+        $total_pages = ceil($total_links / $per_page);
+        $pagination  = paginate_links([
+            'base'      => remove_query_arg('paged', add_query_arg(null, null)) . '%_%',
+            'format'    => '&paged=%#%',
+            'current'   => $paged,
+            'total'     => $total_pages,
+            'prev_text' => __('« Previous'),
+            'next_text' => __('Next »'),
+        ]);
+
         include SHARELINK_DIR . 'admin/views/dashboard.php';
     }
+
 
     public function create() {
         include SHARELINK_DIR . 'admin/views/create-link.php';
@@ -25,7 +56,37 @@ class ShareLink_Admin {
 
     public function logs() {
         global $wpdb;
-        $logs = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}secure_sharelink_logs ORDER BY accessed_at DESC LIMIT 100");
+
+        // Set up pagination variables
+        $per_page = 20; // number of logs per page
+        $paged = isset($_GET['paged']) ? max(1, intval($_GET['paged'])) : 1;
+        $offset = ($paged - 1) * $per_page;
+
+        // Count total logs
+        $total_logs = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}secure_sharelink_logs");
+
+        // Fetch paginated logs
+        $logs = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT * FROM {$wpdb->prefix}secure_sharelink_logs 
+             ORDER BY accessed_at DESC 
+             LIMIT %d OFFSET %d",
+                $per_page,
+                $offset
+            )
+        );
+
+        // Generate pagination links
+        $total_pages = ceil($total_logs / $per_page);
+        $pagination = paginate_links([
+            'base'      => add_query_arg('paged', '%#%'),
+            'format'    => '',
+            'current'   => $paged,
+            'total'     => $total_pages,
+            'prev_text' => __('« Previous'),
+            'next_text' => __('Next »'),
+        ]);
+
         include SHARELINK_DIR . 'admin/views/logs.php';
     }
 
