@@ -10,12 +10,13 @@ class ShareLink_Access
     public function handle_request()
     {
         if (isset($_GET['sharelink'])) {
-            $token = sanitize_text_field($_GET['sharelink']);
+            // Sanitize GET input
+            $token = sanitize_text_field(wp_unslash($_GET['sharelink']));
             $manager = new ShareLink_Manager();
             $data = $manager->get_link($token);
 
             if (!$data) {
-                wp_die(__('Invalid or expired share link.', 'sharelink'));
+                wp_die(esc_html__('Invalid or expired share link.', 'secure-sharelink'));
             }
 
             // Get WP timezone
@@ -25,12 +26,25 @@ class ShareLink_Access
 
             // Check expiry
             if ($expires < $now) {
-                wp_die(__('This link has expired.', 'sharelink'));
+                wp_die(esc_html__('This link has expired.', 'secure-sharelink'));
             }
 
             // Check password
             if (!empty($data['password'])) {
-                $password_input = $_POST['sharelink_password'] ?? null;
+                // Verify nonce if form submitted
+                if (
+                    isset($_POST['sharelink_password_nonce']) &&
+                    !wp_verify_nonce(
+                        sanitize_text_field(wp_unslash($_POST['sharelink_password_nonce'])),
+                        'sharelink_password_action'
+                    )
+                ) {
+                    wp_die(esc_html__('Security check failed. Please try again.', 'secure-sharelink'));
+                }
+
+                $password_input = isset($_POST['sharelink_password'])
+                    ? sanitize_text_field(wp_unslash($_POST['sharelink_password']))
+                    : null;
 
                 if (empty($password_input) || !wp_check_password($password_input, $data['password'])) {
                     ShareLink_Logger::log($data['id'], $token, 'wrong_password');
@@ -43,7 +57,7 @@ class ShareLink_Access
                         $template = plugin_dir_path(__FILE__) . 'templates/sharelink-password-form.php';
                     }
 
-                    // Pass variable safely (for WP < 5.5 compatibility)
+                    // Pass variable safely
                     $args = ['password_input' => $password_input];
                     if (file_exists($template)) {
                         $this->load_template_with_args($template, $args);
@@ -56,16 +70,18 @@ class ShareLink_Access
 
             // Check IP whitelist
             if (!empty($data['ip_whitelist'])) {
-                $ips = array_map('trim', explode(',', $data['ip_whitelist']));
-                $user_ip = $_SERVER['REMOTE_ADDR'] ?? '';
+                $ips     = array_map('trim', explode(',', $data['ip_whitelist']));
+                $user_ip = isset($_SERVER['REMOTE_ADDR'])
+                    ? sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR']))
+                    : '';
                 if (!in_array($user_ip, $ips, true)) {
-                    wp_die(__('Access denied from your IP.', 'sharelink'));
+                    wp_die(esc_html__('Access denied from your IP.', 'secure-sharelink'));
                 }
             }
 
             // Check max uses
             if (!empty($data['max_uses']) && $data['used_count'] >= $data['max_uses']) {
-                wp_die(__('This link has reached its usage limit.', 'sharelink'));
+                wp_die(esc_html__('This link has reached its usage limit.', 'secure-sharelink'));
             }
 
             // Increment usage
@@ -107,5 +123,3 @@ class ShareLink_Access
         include $template;
     }
 }
-
-

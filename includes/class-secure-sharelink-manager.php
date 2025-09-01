@@ -5,38 +5,55 @@ class ShareLink_Manager {
 
     public function __construct() {
         global $wpdb;
-        $this->table = $wpdb->prefix . 'secure_sharelinks';
-        add_shortcode( 'sharelink', array( $this, 'generate_shortcode' ) );
+        // Sanitize table name once and reuse everywhere
+        $this->table = esc_sql($wpdb->prefix . 'secure_sharelinks');
+        add_shortcode('sharelink', array($this, 'generate_shortcode'));
     }
 
     public function generate_token($length = 32) {
-        return bin2hex(random_bytes($length/2));
+        return bin2hex(random_bytes($length / 2));
     }
 
     public function create_link($resource_type, $resource_value, $args = []) {
         global $wpdb;
-        $table = $wpdb->prefix . 'secure_sharelinks';
-        
+
         $token = $this->generate_token();
         $data = [
             'token'             => $token,
             'resource_type'     => $resource_type,
             'resource_value'    => maybe_serialize($resource_value),
             'password'          => isset($args['password']) ? wp_hash_password($args['password']) : null,
-            'ip_whitelist'      => (isset($args['ip_whitelist']) && !empty($args['ip_whitelist'])) ? maybe_serialize($args['ip_whitelist']) : null,
+            'ip_whitelist'      => (!empty($args['ip_whitelist'])) ? maybe_serialize($args['ip_whitelist']) : null,
             'max_uses'          => $args['max_uses'] ?? 0,
             'expires_at'        => $args['expires_at'] ?? null,
             'burn_after_reading'=> $args['burn_after_reading'] ?? 0
         ];
-        $wpdb->insert($table, $data);
+
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+        $wpdb->insert($this->table, $data);
 
         return site_url("shareurl?sharelink={$token}");
     }
 
     public function validate_link($token, $password = null) {
         global $wpdb;
-        $table = $wpdb->prefix . 'secure_sharelinks';
-        $link = $wpdb->get_row($wpdb->prepare("SELECT * FROM $table WHERE token=%s", $token));
+
+        $cache_key = 'secure_sharelink_' . md5($token);
+        $link = wp_cache_get($cache_key, 'secure_sharelinks');
+
+        if (false === $link) {
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+            $link = $wpdb->get_row(
+                $wpdb->prepare(
+                    "SELECT * FROM {$this->table} WHERE token = %s",
+                    $token
+                )
+            );
+
+            if ($link) {
+                wp_cache_set($cache_key, $link, 'secure_sharelinks', 3600);
+            }
+        }
 
         if (!$link) return new WP_Error('invalid', 'Invalid link');
         if ($link->expires_at && strtotime($link->expires_at) < time()) return new WP_Error('expired', 'Link expired');
@@ -52,9 +69,20 @@ class ShareLink_Manager {
 
         // Burn after reading
         if ($link->burn_after_reading) {
-            $wpdb->delete($table, ['id' => $link->id]);
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+            $wpdb->delete($this->table, ['id' => $link->id]);
+            wp_cache_delete($cache_key, 'secure_sharelinks');
         } else {
-            $wpdb->update($table, ['used_count' => $link->used_count + 1, 'last_accessed' => current_time('mysql')], ['id' => $link->id]);
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+            $wpdb->update(
+                $this->table,
+                [
+                    'used_count'    => $link->used_count + 1,
+                    'last_accessed' => current_time('mysql')
+                ],
+                ['id' => $link->id]
+            );
+            wp_cache_delete($cache_key, 'secure_sharelinks');
         }
 
         return [
@@ -71,28 +99,51 @@ class ShareLink_Manager {
         ], $atts);
 
         $url = $this->create_link($atts['type'], $atts['value']);
-        return "<a href='$url'>Secure Link</a>";
+        return "<a href='" . esc_url($url) . "'>Secure Link</a>";
     }
 
     /**
-     * Get link data by token
+     * Get link data by token (with caching)
      */
     public function get_link($token) {
         global $wpdb;
-        $row = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->table} WHERE token = %s", $token), ARRAY_A);
+
+        $cache_key = 'secure_sharelink_' . md5($token);
+        $row = wp_cache_get($cache_key, 'secure_sharelinks');
+
+        if (false === $row) {
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+            $row = $wpdb->get_row(
+                $wpdb->prepare(
+                    "SELECT * FROM {$this->table} WHERE token = %s",
+                    $token
+                ),
+                ARRAY_A
+            );
+
+            if ($row) {
+                wp_cache_set($cache_key, $row, 'secure_sharelinks', 3600);
+            }
+        }
+
         return $row ? $row : false;
     }
 
     /**
-     * Increment usage count
+     * Increment usage count and invalidate cache
      */
     public function increment_usage($token) {
         global $wpdb;
+
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
         $wpdb->query(
             $wpdb->prepare(
                 "UPDATE {$this->table} SET used_count = used_count + 1 WHERE token = %s",
                 $token
             )
         );
+
+        $cache_key = 'secure_sharelink_' . md5($token);
+        wp_cache_delete($cache_key, 'secure_sharelinks');
     }
 }

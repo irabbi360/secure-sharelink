@@ -15,12 +15,12 @@
         <tbody>
         <?php foreach ($logs as $log): ?>
             <tr>
-                <td><?php echo $log->id; ?></td>
-                <td><?php echo $log->link_id; ?></td>
-                <td><?php echo $log->ip_address; ?></td>
-                <td><?php echo $log->status; ?></td>
-                <td><?php echo $log->user_agent; ?></td>
-                <td><?php echo $log->accessed_at; ?></td>
+                <td><?php echo esc_html( $log->id); ?></td>
+                <td><?php echo esc_html( $log->link_id); ?></td>
+                <td><?php echo esc_html( $log->ip_address); ?></td>
+                <td><?php echo esc_html( $log->status); ?></td>
+                <td><?php echo esc_html( $log->user_agent); ?></td>
+                <td><?php echo esc_html( $log->accessed_at); ?></td>
             </tr>
         <?php endforeach; ?>
         </tbody>

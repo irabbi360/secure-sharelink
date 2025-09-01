@@ -1,6 +1,6 @@
 <div class="wrap">
     <h1 class="wp-heading-inline">ShareLink Manager</h1>
-    <a href="<?php echo admin_url('admin.php?page=sharelink-create'); ?>" class="page-title-action">
+    <a href="<?php echo esc_url( admin_url( 'admin.php?page=sharelink-create' ) ); ?>" class="page-title-action">
         + Create New Link
     </a>
     <hr class="wp-header-end">
@@ -18,18 +18,18 @@
         <tbody>
         <?php foreach ($links as $link): ?>
             <tr>
-                <td><?php echo $link->id; ?></td>
+                <td><?php echo esc_html( $link->id ); ?></td>
                 <td><?php echo esc_html($link->resource_type); ?></td>
                 <td>
-                    <a href="<?php echo site_url('shareurl?sharelink=' . $link->token); ?>" target="_blank">Open</a>
+                    <a href="<?php echo esc_url( site_url( 'shareurl?sharelink=' . $link->token ) ); ?>" target="_blank">Open</a>
                 </td>
-                <td><?php echo "{$link->used_count}/" . ($link->max_uses ?: '∞'); ?></td>
-                <td><?php echo $link->expires_at ?: 'Never'; ?></td>
+                <td><?php echo esc_html("{$link->used_count}/" . ($link->max_uses ?: '∞')); ?></td>
+                <td><?php echo esc_html( $link->expires_at ?: 'Never'); ?></td>
                 <td>
-                    <form method="post" action="<?php echo admin_url('admin-post.php'); ?>">
+                    <form method="post" action="<?php echo esc_url( admin_url('admin-post.php') ); ?>">
                         <?php wp_nonce_field('sharelink_delete'); ?>
                         <input type="hidden" name="action" value="sharelink_delete">
-                        <input type="hidden" name="id" value="<?php echo $link->id; ?>">
+                        <input type="hidden" name="id" value="<?php echo esc_html( $link->id); ?>">
                         <button class="button-link-delete">Delete</button>
                     </form>
                 </td>

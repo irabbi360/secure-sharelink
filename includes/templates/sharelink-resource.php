@@ -7,12 +7,12 @@
  */
 ?>
 <div class="sharelink-content" style="max-width:800px;margin:50px auto;text-align:center;">
-    <h2><?php esc_html_e('Shared Resource', 'sharelink'); ?></h2>
+    <h2><?php esc_html_e('Shared Resource', 'secure-sharelink'); ?></h2>
 
     <?php if ($data['resource_type'] === 'file'): ?>
         <p>
             <a href="<?php echo esc_url($data['resource_value']); ?>" download>
-                <?php esc_html_e('Download File', 'sharelink'); ?>
+                <?php esc_html_e('Download File', 'secure-sharelink'); ?>
             </a>
         </p>
     <?php elseif ($data['resource_type'] === 'url'): ?>

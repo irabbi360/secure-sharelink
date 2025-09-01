@@ -1,4 +1,4 @@
-<?php if (!empty($_GET['errors'])): 
+<?php if (!empty($_GET['errors'])):
     $errors = json_decode(stripslashes($_GET['errors']), true);
     if ($errors): ?>
         <div class="notice notice-error is-dismissible">
@@ -8,12 +8,12 @@
                 <?php endforeach; ?>
             </ul>
         </div>
-    <?php endif; 
+    <?php endif;
 endif; ?>
 
 <div class="wrap">
   <h1>Create Secure Link</h1>
-  <form method="post" action="<?php echo admin_url('admin-post.php'); ?>">
+  <form method="post" action="<?php echo esc_url( admin_url('admin-post.php') ); ?>">
     <?php wp_nonce_field('sharelink_create'); ?>
     <input type="hidden" name="action" value="sharelink_create">
 

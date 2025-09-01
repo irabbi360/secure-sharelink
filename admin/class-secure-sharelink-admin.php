@@ -42,8 +42,8 @@ class ShareLink_Admin {
             'format'    => '&paged=%#%',
             'current'   => $paged,
             'total'     => $total_pages,
-            'prev_text' => __('« Previous'),
-            'next_text' => __('Next »'),
+            'prev_text' => __('« Previous', 'secure-sharelink'),
+            'next_text' => __('Next »', 'secure-sharelink'),
         ]);
 
         include SHARELINK_DIR . 'admin/views/dashboard.php';
@@ -83,8 +83,8 @@ class ShareLink_Admin {
             'format'    => '',
             'current'   => $paged,
             'total'     => $total_pages,
-            'prev_text' => __('« Previous'),
-            'next_text' => __('Next »'),
+            'prev_text' => __('« Previous', 'secure-sharelink'),
+            'next_text' => __('Next »', 'secure-sharelink'),
         ]);
 
         include SHARELINK_DIR . 'admin/views/logs.php';
@@ -142,7 +142,7 @@ class ShareLink_Admin {
             } elseif ($expires_at_time < time()) {
                 $errors[] = "Expiry date must be in the future.";
             } else {
-                $expires_at = date('Y-m-d H:i:s', $expires_at_time);
+                $expires_at = wp_date('Y-m-d H:i:s', $expires_at_time);
             }
         }
 
