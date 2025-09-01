@@ -177,7 +177,20 @@ class ShareLink_Admin {
     public function handle_delete() {
         check_admin_referer('sharelink_delete');
         global $wpdb;
-        $wpdb->delete($wpdb->prefix . 'secure_sharelinks', ['id' => intval($_POST['id'])]);
+
+        $id = intval($_POST['id']);
+        if (!$id) {
+            wp_die(__('Invalid link ID', 'sharelink'));
+        }
+
+        // Delete the sharelink
+        $deleted = $wpdb->delete($wpdb->prefix . 'secure_sharelinks', ['id' => $id]);
+
+        if ($deleted !== false) {
+            // Delete related logs
+            $wpdb->delete($wpdb->prefix . 'secure_sharelink_logs', ['link_id' => $id]);
+        }
+
         wp_redirect(admin_url('admin.php?page=sharelink&deleted=1'));
         exit;
     }
