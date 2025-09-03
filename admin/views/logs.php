@@ -1,3 +1,10 @@
+<?php
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+?>
+
 <div class="wrap">
     <h1 class="wp-heading-inline">Access Logs</h1>
     <hr class="wp-header-end">
@@ -28,7 +35,7 @@
 
     <?php if (!empty($pagination)) : ?>
         <div class="tablenav-pages">
-            <?php echo $pagination; ?>
+            <?php echo wp_kses_post($pagination); ?>
         </div>
     <?php endif; ?>
 </div>

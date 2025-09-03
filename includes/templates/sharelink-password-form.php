@@ -1,4 +1,10 @@
 <?php
+// Exit if accessed directly.
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+
 /**
  * ShareLink Password Form Template
  *
@@ -18,7 +24,9 @@
 
     <form method="post">
         <div style="display: flex; align-items: center; justify-content: center;">
-            <input type="password" name="sharelink_password" class="h-auto" placeholder="<?php esc_attr_e('Enter password', 'secure-sharelink'); ?>" required />
+            <?php wp_nonce_field('sharelink_access', 'sharelink_access_nonce'); ?>
+            <input type="password" name="sharelink_password" class="h-auto"
+                   placeholder="<?php esc_attr_e('Enter password', 'secure-sharelink'); ?>" required/>
             <button type="submit" style="margin-left: 10px;"><?php esc_html_e('Access', 'secure-sharelink'); ?></button>
         </div>
     </form>

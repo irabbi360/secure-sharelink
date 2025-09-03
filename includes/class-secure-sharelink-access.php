@@ -10,6 +10,10 @@ class ShareLink_Access
     public function handle_request()
     {
         if (isset($_GET['sharelink'])) {
+            if (!sanitize_text_field(wp_unslash($_GET['sharelink'])) !== null && !!wp_verify_nonce(sanitize_text_field(wp_unslash($_GET['sharelink'])))) {
+                // If the nonce is not present, bail out.
+                wp_die(esc_html__('Security check failed. Nonce is missing.', 'secure-sharelink'));
+            }
             // Sanitize GET input
             $token = sanitize_text_field(wp_unslash($_GET['sharelink']));
             $manager = new ShareLink_Manager();
@@ -31,15 +35,16 @@ class ShareLink_Access
 
             // Check password
             if (!empty($data['password'])) {
-                // Verify nonce if form submitted
                 if (
-                    isset($_POST['sharelink_password_nonce']) &&
+                    isset($_POST['sharelink_access_nonce']) &&
                     !wp_verify_nonce(
-                        sanitize_text_field(wp_unslash($_POST['sharelink_password_nonce'])),
-                        'sharelink_password_action'
+                        sanitize_text_field(wp_unslash($_POST['sharelink_access_nonce'])),
+                        'sharelink_access'
                     )
                 ) {
-                    wp_die(esc_html__('Security check failed. Please try again.', 'secure-sharelink'));
+                    if (isset($_POST['sharelink_access_nonce'])) {
+                        wp_die(esc_html__('Security check failed. Please try again.', 'secure-sharelink'));
+                    }
                 }
 
                 $password_input = isset($_POST['sharelink_password'])
@@ -51,13 +56,11 @@ class ShareLink_Access
 
                     get_header();
 
-                    // Locate template (theme override first, plugin fallback)
                     $template = locate_template('sharelink-password-form.php');
                     if (!$template) {
                         $template = plugin_dir_path(__FILE__) . 'templates/sharelink-password-form.php';
                     }
 
-                    // Pass variable safely
                     $args = ['password_input' => $password_input];
                     if (file_exists($template)) {
                         $this->load_template_with_args($template, $args);

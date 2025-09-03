@@ -96,23 +96,23 @@ class ShareLink_Admin {
         $errors = [];
 
         // Resource type validation
-        $resource_type = sanitize_text_field($_POST['resource_type'] ?? '');
-        $valid_types = ['file', 'route', 'data'];
+        $resource_type = sanitize_text_field(!empty(wp_unslash($_POST['resource_type'])) ? wp_unslash($_POST['resource_type']) : '');
+        $valid_types = ['file', 'url', 'data'];
         if (!in_array($resource_type, $valid_types, true)) {
             $errors[] = "Invalid resource type.";
         }
 
         // Resource value validation
-        $resource_value = trim(sanitize_text_field($_POST['resource_value'] ?? ''));
+        $resource_value = trim(sanitize_text_field(!empty(wp_unslash($_POST['resource_value'])) ? wp_unslash($_POST['resource_value']) : ''));
         if (empty($resource_value)) {
             $errors[] = "Resource value is required.";
         }
 
         // Password (optional)
-        $password = !empty($_POST['password']) ? sanitize_text_field($_POST['password']) : null;
+        $password = sanitize_text_field(!empty(wp_unslash($_POST['password'])) ? wp_unslash($_POST['password']) : null);
 
         // IP whitelist validation
-        $ip_whitelist_raw = sanitize_text_field($_POST['ip_whitelist'] ?? '');
+        $ip_whitelist_raw = sanitize_text_field(!empty(wp_unslash($_POST['ip_whitelist'])) ? wp_unslash($_POST['ip_whitelist']) : '');
         $ip_whitelist = [];
         if (!empty($ip_whitelist_raw)) {
             foreach (explode(',', $ip_whitelist_raw) as $ip) {
@@ -134,7 +134,7 @@ class ShareLink_Admin {
         // Expiry validation
         $expires_at = null;
         if (!empty($_POST['expires_at'])) {
-            $expires_at_raw = sanitize_text_field($_POST['expires_at']);
+            $expires_at_raw = sanitize_text_field(wp_unslash($_POST['expires_at']));
             $expires_at_time = strtotime($expires_at_raw);
 
             if ($expires_at_time === false) {
@@ -149,11 +149,12 @@ class ShareLink_Admin {
         // Burn after reading
         $burn_after_reading = isset($_POST['burn_after_reading']) ? 1 : 0;
 
-        // If errors, redirect back with messages
+        // If errors, redirect back with messages and nonce
         if (!empty($errors)) {
             $redirect_url = add_query_arg([
-                'page'   => 'sharelink-create',
-                'errors' => urlencode(json_encode($errors))
+                'page'     => 'sharelink-create',
+                'errors'   => urlencode(json_encode($errors)),
+                '_wpnonce' => wp_create_nonce('sharelink_errors'),
             ], admin_url('admin.php'));
 
             wp_redirect($redirect_url);
@@ -170,6 +171,7 @@ class ShareLink_Admin {
             'burn_after_reading' => $burn_after_reading,
         ]);
 
+        // Redirect on success
         wp_redirect(admin_url('admin.php?page=sharelink&created=1&url=' . urlencode($url)));
         exit;
     }
@@ -178,7 +180,8 @@ class ShareLink_Admin {
         check_admin_referer('sharelink_delete');
         global $wpdb;
 
-        $id = intval($_POST['id']);
+        $id = !empty(sanitize_text_field(wp_unslash($_POST['id']))) ? intval(sanitize_text_field(wp_unslash($_POST['id']))) : 0;
+
         if (!$id) {
             wp_die(esc_html__('Invalid link ID', 'secure-sharelink'));
         }

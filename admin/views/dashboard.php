@@ -1,3 +1,10 @@
+<?php
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+?>
+
 <div class="wrap">
     <h1 class="wp-heading-inline">ShareLink Manager</h1>
     <a href="<?php echo esc_url( admin_url( 'admin.php?page=sharelink-create' ) ); ?>" class="page-title-action">
@@ -40,7 +47,7 @@
 
     <?php if (!empty($pagination)) : ?>
         <div class="tablenav-pages">
-            <?php echo $pagination; ?>
+            <?php echo wp_kses_post($pagination); ?>
         </div>
     <?php endif; ?>
 </div>
