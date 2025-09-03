@@ -109,7 +109,7 @@ class ShareLink_Admin {
         }
 
         // Password (optional)
-        $password = sanitize_text_field(!empty(wp_unslash($_POST['password'])) ? wp_unslash($_POST['password']) : null);
+        $password = !empty(sanitize_text_field(wp_unslash($_POST['password']))) ? sanitize_text_field(wp_unslash($_POST['password'])) : null;
 
         // IP whitelist validation
         $ip_whitelist_raw = sanitize_text_field(!empty(wp_unslash($_POST['ip_whitelist'])) ? wp_unslash($_POST['ip_whitelist']) : '');
