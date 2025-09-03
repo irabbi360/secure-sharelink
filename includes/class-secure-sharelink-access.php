@@ -26,7 +26,12 @@ class ShareLink_Access
             // Get WP timezone
             $timezone = wp_timezone();
             $now      = new DateTime('now', $timezone);
-            $expires  = new DateTime($data['expires_at'], $timezone);
+
+            if (!empty($data['expires_at'])) {
+                $expires = new DateTime($data['expires_at'], $timezone);
+            } else {
+                $expires = clone $now; // or use a fallback time
+            }
 
             // Check expiry
             if ($expires < $now) {
