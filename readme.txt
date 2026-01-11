@@ -1,11 +1,11 @@
-=== Secure ShareLink - 🔐 Generate, manage, and secure temporary share links for files, 301 Redirect, and add data preview. === 
+=== Secure ShareLink - Generate, manage, and secure temporary share links for files, 301 Redirect, and add data preview. === 
 
 Contributors: irabbi360
-Tags: share secure, link, file sharing, temporary access, password protection
+Tags: share secure link, file sharing, temporary access, password protection, 301 redirect, redirect
 Requires at least: 5.2
 Tested up to: 6.9
 Requires PHP: 7.2
-Stable tag: 1.1.0
+Stable tag: 1.1.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -95,6 +95,9 @@ Q: Can I restrict access by IP?
 A: Yes, you can whitelist specific IP addresses or ranges when creating a link.
 
 == Changelog ==
+
+1.1.1
+ - Fix old data deleted on update 
 
 1.1.0
  - Add 301 Redirect

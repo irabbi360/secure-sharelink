@@ -2,6 +2,12 @@
 class ShareLink_Activator {
     public static function activate() {
         global $wpdb;
+        
+        // Only create tables if they don't exist (prevents data loss on updates)
+        if ( get_option( 'sharelink_tables_created' ) ) {
+            return;
+        }
+        
         $table_name = $wpdb->prefix . 'secure_sharelinks';
         $charset_collate = $wpdb->get_charset_collate();
 
@@ -34,6 +40,9 @@ class ShareLink_Activator {
         ) $charset_collate;";
 
         dbDelta($sql_logs);
+        
+        // Mark tables as created to prevent unnecessary recreation on updates
+        update_option( 'sharelink_tables_created', true );
         
         // Flush rewrite rules to activate custom rewrite rules
         flush_rewrite_rules();
