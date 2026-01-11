@@ -1,21 +1,21 @@
-Secure ShareLink
+=== Secure ShareLink - 🔐 Generate, manage, and secure temporary share links for files, 301 Redirect, and add data preview. === 
 
 Contributors: irabbi360
 Tags: share secure, link, file sharing, temporary access, password protection
 Requires at least: 5.2
-Tested up to: 6.8
+Tested up to: 6.9
 Requires PHP: 7.2
-Stable tag: 1.0.0
+Stable tag: 1.1.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Description
+== Description ==
 
 Secure ShareLink is a WordPress plugin that allows you to generate secure, time-limited sharing links for files, routes, or model data. It includes advanced security features such as password protection, IP filtering, burn-after-read, and usage limits, along with comprehensive auditing. Perfect for sharing sensitive content or providing temporary access to resources.
 
-Key Features
+== Key Features == 
 
-🔗 Multiple Resource Types – Share files, URLs, or text/data seamlessly
+🔗 Multiple Resource Types – Share files, URLs, 301 Redirect, or text/data seamlessly
 
 ⏰ Time-Limited Access – Set expiration dates and usage limits
 
@@ -29,11 +29,11 @@ Key Features
 
 🎯 Flexible Delivery – Supports file downloads and URL redirection
 
-💻 Admin UI – Create, manage, and monitor links from WordPress admin
+💻 Admin UI – Create, edit, manage, and monitor links from WordPress admin
 
 🧪 Secure – Passwords are hashed, preventing exposure in the database
 
-Installation
+== Installation ==
 
 Upload the secure-sharelink folder to the /wp-content/plugins/ directory.
 
@@ -43,7 +43,8 @@ Go to Settings → Permalinks and click Save Changes to flush rewrite rules.
 
 Access the admin UI from ShareLink in the WordPress admin menu.
 
-Usage
+== Usage == 
+
 Creating a Link
 
 Go to ShareLink → Add New.
@@ -82,7 +83,7 @@ Automatically delete if burn-after-reading is enabled.
 
 Users can download files or view content directly depending on the resource type.
 
-Frequently Asked Questions
+== Frequently Asked Questions ==
 
 Q: Can I use this to share any file from my WordPress Media Library?
 A: Yes, simply pick the file when creating a link.
@@ -93,7 +94,13 @@ A: Yes, passwords are hashed using WordPress’s secure password functions.
 Q: Can I restrict access by IP?
 A: Yes, you can whitelist specific IP addresses or ranges when creating a link.
 
-Changelog
+== Changelog ==
+
+1.1.0
+ - Add 301 Redirect
+ - Link Statistics monitor added
+ - Link edit option added
+
 1.0.0
 
 Initial release with full link management, password protection, expiration, IP filters, and burn-after-read.
