@@ -5,7 +5,7 @@ Tags: share secure link, file sharing, temporary access, password protection, 30
 Requires at least: 5.2
 Tested up to: 6.9
 Requires PHP: 7.2
-Stable tag: 1.1.1
+Stable tag: 1.1.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -95,6 +95,9 @@ Q: Can I restrict access by IP?
 A: Yes, you can whitelist specific IP addresses or ranges when creating a link.
 
 == Changelog ==
+
+1.1.2
+ - Shared resource page title update 
 
 1.1.1
  - Fix old data deleted on update 

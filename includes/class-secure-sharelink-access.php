@@ -114,6 +114,18 @@ class ShareLink_Access
             // Log successful access
             ShareLink_Logger::log($data['id'], $token, 'success');
 
+            // Set page title and mark as not 404
+            add_filter('pre_get_document_title', function() {
+                $page_title = esc_html__('Secure Share Link', 'secure-sharelink');
+                $site_title = get_bloginfo('name');
+                return $page_title . ' | ' . $site_title;
+            });
+            
+            // Prevent WordPress from showing 404
+            global $wp_query;
+            $wp_query->is_404 = false;
+            status_header(200);
+
             // Handle 301 redirect - do this before any output
             if ($data['resource_type'] === '301_redirect') {
                 status_header(301);
