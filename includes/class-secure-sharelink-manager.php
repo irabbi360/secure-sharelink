@@ -148,4 +148,81 @@ class ShareLink_Manager {
         $cache_key = 'secure_sharelink_' . md5($token);
         wp_cache_delete($cache_key, 'secure_sharelinks');
     }
+
+    /**
+     * Update existing link
+     */
+    public function update_link($id, $args = []) {
+        global $wpdb;
+
+        $data = [];
+
+        if (isset($args['resource_value'])) {
+            $data['resource_value'] = maybe_serialize($args['resource_value']);
+        }
+
+        if (isset($args['password'])) {
+            $data['password'] = !empty($args['password']) ? wp_hash_password($args['password']) : null;
+        }
+
+        if (isset($args['ip_whitelist'])) {
+            $data['ip_whitelist'] = (!empty($args['ip_whitelist'])) ? maybe_serialize($args['ip_whitelist']) : null;
+        }
+
+        if (isset($args['max_uses'])) {
+            $data['max_uses'] = (int) $args['max_uses'];
+        }
+
+        if (isset($args['expires_at'])) {
+            $data['expires_at'] = $args['expires_at'];
+        }
+
+        if (isset($args['burn_after_reading'])) {
+            $data['burn_after_reading'] = (int) $args['burn_after_reading'];
+        }
+
+        if (empty($data)) {
+            return false;
+        }
+
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+        $result = $wpdb->update($this->table, $data, ['id' => $id]);
+
+        // Clear cache
+        $link = $wpdb->get_row($wpdb->prepare("SELECT token FROM {$this->table} WHERE id = %d", $id));
+        if ($link) {
+            $cache_key = 'secure_sharelink_' . md5($link->token);
+            wp_cache_delete($cache_key, 'secure_sharelinks');
+        }
+
+        return $result !== false;
+    }
+
+    /**
+     * Get link by ID
+     */
+    public function get_link_by_id($id) {
+        global $wpdb;
+
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+        $row = $wpdb->get_row(
+            $wpdb->prepare(
+                "SELECT * FROM {$this->table} WHERE id = %d",
+                $id
+            ),
+            ARRAY_A
+        );
+
+        return $row ? $row : false;
+    }
+
+    /**
+     * Delete link by ID
+     */
+    public function delete_link($token) {
+        global $wpdb;
+
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+        return $wpdb->delete($this->table, ['token' => $token]);
+    }
 }

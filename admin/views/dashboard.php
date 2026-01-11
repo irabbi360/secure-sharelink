@@ -54,11 +54,12 @@ if (isset($_GET['created']) && $_GET['created'] === '1' && isset($_GET['url'])) 
                 <td><?php echo esc_html("{$link->used_count}/" . ($link->max_uses ?: '∞')); ?></td>
                 <td><?php echo esc_html( $link->expires_at ?: 'Never'); ?></td>
                 <td>
-                    <form method="post" action="<?php echo esc_url( admin_url('admin-post.php') ); ?>">
+                    <a href="<?php echo esc_url(admin_url('admin.php?page=sharelink-edit&id=' . $link->id)); ?>" class="button button-small">Edit</a>
+                    <form method="post" action="<?php echo esc_url( admin_url('admin-post.php') ); ?>" style="display:inline;">
                         <?php wp_nonce_field('sharelink_delete'); ?>
                         <input type="hidden" name="action" value="sharelink_delete">
                         <input type="hidden" name="id" value="<?php echo esc_html( $link->id); ?>">
-                        <button class="button-link-delete">Delete</button>
+                        <button class="button button-small button-link-delete">Delete</button>
                     </form>
                 </td>
             </tr>

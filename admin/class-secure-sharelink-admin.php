@@ -3,8 +3,15 @@ class ShareLink_Admin {
     public function __construct() {
         add_action('admin_menu', [$this, 'menu']);
         add_action('admin_post_sharelink_create', [$this, 'handle_create']);
+        add_action('admin_post_sharelink_edit', [$this, 'handle_edit']);
         add_action('admin_post_sharelink_delete', [$this, 'handle_delete']);
         add_action('admin_enqueue_scripts', [$this, 'enqueue_assets']);
+        add_action('admin_menu', [$this, 'register_hidden_pages']);
+    }
+
+    public function register_hidden_pages() {
+        // Register edit page without displaying it in menu
+        add_submenu_page(null, 'Edit Link', 'Edit Link', 'manage_options', 'sharelink-edit', [$this, 'edit']);
     }
 
     public function menu() {
@@ -52,6 +59,32 @@ class ShareLink_Admin {
 
     public function create() {
         include SHARELINK_DIR . 'admin/views/create-link.php';
+    }
+
+    public function edit() {
+        $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+
+        if (!$id) {
+            wp_die(esc_html__('Invalid link ID', 'secure-sharelink'));
+        }
+
+        $manager = new ShareLink_Manager();
+        $link = $manager->get_link_by_id($id);
+
+        if (!$link) {
+            wp_die(esc_html__('Link not found', 'secure-sharelink'));
+        }
+
+        // Unserialize data
+        $link['ip_whitelist'] = !empty($link['ip_whitelist']) ? maybe_unserialize($link['ip_whitelist']) : [];
+
+        // Handle errors display
+        $errors = [];
+        if (isset($_GET['errors'])) {
+            $errors = json_decode(urldecode(sanitize_text_field(wp_unslash($_GET['errors']))), true) ?: [];
+        }
+
+        include SHARELINK_DIR . 'admin/views/edit-link.php';
     }
 
     public function logs() {
@@ -217,6 +250,98 @@ class ShareLink_Admin {
         }
 
         wp_redirect(admin_url('admin.php?page=sharelink&deleted=1'));
+        exit;
+    }
+
+    public function handle_edit() {
+        check_admin_referer('sharelink_edit');
+
+        $id = !empty(sanitize_text_field(wp_unslash($_POST['id']))) ? intval(sanitize_text_field(wp_unslash($_POST['id']))) : 0;
+
+        if (!$id) {
+            wp_die(esc_html__('Invalid link ID', 'secure-sharelink'));
+        }
+
+        $errors = [];
+        $manager = new ShareLink_Manager();
+        $link = $manager->get_link_by_id($id);
+
+        if (!$link) {
+            wp_die(esc_html__('Link not found', 'secure-sharelink'));
+        }
+
+        // Resource value validation
+        $resource_value = trim(sanitize_text_field(!empty(wp_unslash($_POST['resource_value'])) ? wp_unslash($_POST['resource_value']) : ''));
+        if (empty($resource_value)) {
+            $errors[] = "Resource value is required.";
+        }
+
+        // Password (optional)
+        $password = !empty(sanitize_text_field(wp_unslash($_POST['password']))) ? sanitize_text_field(wp_unslash($_POST['password'])) : null;
+
+        // IP whitelist validation
+        $ip_whitelist_raw = sanitize_text_field(!empty(wp_unslash($_POST['ip_whitelist'])) ? wp_unslash($_POST['ip_whitelist']) : '');
+        $ip_whitelist = [];
+        if (!empty($ip_whitelist_raw)) {
+            foreach (explode(',', $ip_whitelist_raw) as $ip) {
+                $ip = trim($ip);
+                if (filter_var($ip, FILTER_VALIDATE_IP)) {
+                    $ip_whitelist[] = $ip;
+                } else {
+                    $errors[] = "Invalid IP address: {$ip}";
+                }
+            }
+        }
+
+        // Max uses
+        $max_uses = intval($_POST['max_uses'] ?? 0);
+        if ($max_uses < 0) {
+            $errors[] = "Max uses must be zero or a positive number.";
+        }
+
+        // Expiry validation
+        $expires_at = null;
+        if (!empty($_POST['expires_at'])) {
+            $expires_at_raw = sanitize_text_field(wp_unslash($_POST['expires_at']));
+            $expires_at_time = strtotime($expires_at_raw);
+
+            if ($expires_at_time === false) {
+                $errors[] = "Invalid expiry date format.";
+            } elseif ($expires_at_time < time()) {
+                $errors[] = "Expiry date must be in the future.";
+            } else {
+                $expires_at = wp_date('Y-m-d H:i:s', $expires_at_time);
+            }
+        }
+
+        // Burn after reading
+        $burn_after_reading = isset($_POST['burn_after_reading']) ? 1 : 0;
+
+        // If errors, redirect back with messages
+        if (!empty($errors)) {
+            $redirect_url = add_query_arg([
+                'page'     => 'sharelink-edit',
+                'id'       => $id,
+                'errors'   => urlencode(json_encode($errors)),
+                '_wpnonce' => wp_create_nonce('sharelink_errors'),
+            ], admin_url('admin.php'));
+
+            wp_redirect($redirect_url);
+            exit;
+        }
+
+        // Update link
+        $manager->update_link($id, [
+            'resource_value'     => $resource_value,
+            'password'           => $password,
+            'ip_whitelist'       => $ip_whitelist,
+            'max_uses'           => $max_uses,
+            'expires_at'         => $expires_at,
+            'burn_after_reading' => $burn_after_reading,
+        ]);
+
+        // Redirect on success
+        wp_redirect(admin_url('admin.php?page=sharelink&updated=1'));
         exit;
     }
 
