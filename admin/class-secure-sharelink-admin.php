@@ -403,7 +403,7 @@ class ShareLink_Admin {
         if (strpos($hook, 'sharelink') === false) return;
 
         wp_enqueue_media();
-        wp_enqueue_script('sharelink-admin', SHARELINK_URL . 'assets/js/admin.js', ['jquery'], SHARELINK_VERSION, true);
-        wp_enqueue_style('sharelink-admin', SHARELINK_URL . 'assets/css/admin.css', [], SHARELINK_VERSION);
+        wp_enqueue_script('sharelink-admin', SHARELINK_URL . 'assets/js/secure-sharelink-admin.js', ['jquery'], SHARELINK_VERSION, true);
+        wp_enqueue_style('sharelink-admin', SHARELINK_URL . 'assets/css/secure-sharelink-admin.css', [], SHARELINK_VERSION);
     }
 }

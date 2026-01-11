@@ -31,6 +31,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                 </th>
                 <td>
                     <span><?php echo esc_html($link['resource_type']); ?></span>
+                    <input type="hidden" id="resource_type" value="<?php echo esc_attr($link['resource_type']); ?>">
                     <p class="description"><?php esc_html_e('Resource type cannot be changed after creation.', 'secure-sharelink'); ?></p>
                 </td>
             </tr>
@@ -40,9 +41,26 @@ if ( ! defined( 'ABSPATH' ) ) {
                     <label for="resource_value"><?php esc_html_e('Resource Value', 'secure-sharelink'); ?></label>
                 </th>
                 <td>
-                    <input type="text" id="resource_value" name="resource_value" class="regular-text" value="<?php echo esc_attr(maybe_unserialize($link['resource_value'])); ?>">
-                    <button type="button" class="button select-file"><?php esc_html_e('Select from Media', 'secure-sharelink'); ?></button>
-                    <p class="description"><?php esc_html_e('Update the resource value (file path or URL).', 'secure-sharelink'); ?></p>
+                    <!-- Hidden input to hold the actual value for form submission -->
+                    <input type="hidden" id="resource_value_hidden" name="resource_value" value="<?php echo esc_attr(maybe_unserialize($link['resource_value'])); ?>">
+
+                    <!-- File Input (with Media Picker) -->
+                    <div id="resource_value_file" class="resource-value-wrapper">
+                        <input type="text" id="resource_value_file_input" class="regular-text" value="<?php echo esc_attr(maybe_unserialize($link['resource_value'])); ?>">
+                        <button type="button" class="button select-file"><?php esc_html_e('Select from Media', 'secure-sharelink'); ?></button>
+                    </div>
+
+                    <!-- URL/Redirect Input -->
+                    <div id="resource_value_url" class="resource-value-wrapper" style="display: none;">
+                        <input type="text" id="resource_value_url_input" class="regular-text" value="<?php echo esc_attr(maybe_unserialize($link['resource_value'])); ?>">
+                    </div>
+
+                    <!-- Data Textarea -->
+                    <div id="resource_value_data" class="resource-value-wrapper" style="display: none;">
+                        <textarea id="resource_value_data_input" class="regular-text" style="width: 100%; height: 100px;"><?php echo esc_textarea(maybe_unserialize($link['resource_value'])); ?></textarea>
+                    </div>
+
+                    <p class="description"><?php esc_html_e('Update the resource value.', 'secure-sharelink'); ?></p>
                 </td>
             </tr>
 

@@ -34,7 +34,7 @@ if (
             <tr>
                 <th>Resource Type</th>
                 <td>
-                    <select name="resource_type">
+                    <select id="resource_type" name="resource_type">
                         <option value="file">File</option>
                         <option value="url">URL</option>
                         <option value="data">Data</option>
@@ -45,8 +45,24 @@ if (
             <tr>
                 <th>Resource Value</th>
                 <td>
-                    <input type="text" id="resource_value" name="resource_value" class="regular-text" placeholder="/wp-content/uploads/file.pdf">
-                    <button type="button" class="button select-file">Select from Media</button>
+                    <!-- Hidden input to hold the actual value for form submission -->
+                    <input type="hidden" id="resource_value_hidden" name="resource_value">
+
+                    <!-- File Input (with Media Picker) -->
+                    <div id="resource_value_file" class="resource-value-wrapper">
+                        <input type="text" id="resource_value_file_input" class="regular-text" placeholder="/wp-content/uploads/file.pdf">
+                        <button type="button" class="button select-file">Select from Media</button>
+                    </div>
+
+                    <!-- URL/Redirect Input -->
+                    <div id="resource_value_url" class="resource-value-wrapper" style="display: none;">
+                        <input type="text" id="resource_value_url_input" class="regular-text" placeholder="https://example.com">
+                    </div>
+
+                    <!-- Data Textarea -->
+                    <div id="resource_value_data" class="resource-value-wrapper" style="display: none;">
+                        <textarea id="resource_value_data_input" class="regular-text" style="width: 100%; height: 100px;" placeholder="Enter your text data here..."></textarea>
+                    </div>
                 </td>
             </tr>
             <tr>
