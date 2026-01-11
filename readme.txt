@@ -67,7 +67,7 @@ Burn after reading
 
 Click Create Link. You will get a secure URL like:
 
-http://yourdomain.com/shareurl?sharelink=82ddae9522c4dd0a40bcdfd036c5f56f
+http://yourdomain.com/shareurl/82ddae9522c4dd0a40bcdfd036c5f56f
 
 Accessing a Link
 
@@ -109,10 +109,6 @@ Admin UI for creating and managing links.
 
 Media Library integration for file selection.
 
-Upgrade Notice
-
-N/A — first release.
-
-License
+== License ==
 
 GPLv2 or later: https://www.gnu.org/licenses/gpl-2.0.html
