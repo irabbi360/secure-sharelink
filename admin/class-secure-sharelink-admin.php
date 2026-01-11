@@ -12,6 +12,8 @@ class ShareLink_Admin {
     public function register_hidden_pages() {
         // Register edit page without displaying it in menu
         add_submenu_page(null, 'Edit Link', 'Edit Link', 'manage_options', 'sharelink-edit', [$this, 'edit']);
+        // Register stats page without displaying it in menu
+        add_submenu_page(null, 'Link Statistics', 'Link Statistics', 'manage_options', 'sharelink-stats', [$this, 'view_stats']);
     }
 
     public function menu() {
@@ -121,6 +123,58 @@ class ShareLink_Admin {
         ]);
 
         include SHARELINK_DIR . 'admin/views/logs.php';
+    }
+
+    public function view_stats() {
+        global $wpdb;
+
+        $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+
+        if (!$id) {
+            wp_die(esc_html__('Invalid link ID', 'secure-sharelink'));
+        }
+
+        $manager = new ShareLink_Manager();
+        $link = $manager->get_link_by_id($id);
+
+        if (!$link) {
+            wp_die(esc_html__('Link not found', 'secure-sharelink'));
+        }
+
+        // Pagination variables
+        $per_page = 20;
+        $paged = isset($_GET['paged']) ? max(1, intval($_GET['paged'])) : 1;
+        $offset = ($paged - 1) * $per_page;
+
+        // Count total logs for this link
+        $total_logs = (int) $wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM {$wpdb->prefix}secure_sharelink_logs WHERE link_id = %d",
+            $id
+        ));
+
+        // Fetch paginated logs for this link
+        $logs = $wpdb->get_results($wpdb->prepare(
+            "SELECT * FROM {$wpdb->prefix}secure_sharelink_logs 
+             WHERE link_id = %d
+             ORDER BY accessed_at DESC 
+             LIMIT %d OFFSET %d",
+            $id,
+            $per_page,
+            $offset
+        ));
+
+        // Generate pagination links
+        $total_pages = ceil($total_logs / $per_page);
+        $pagination = paginate_links([
+            'base'      => add_query_arg('paged', '%#%'),
+            'format'    => '',
+            'current'   => $paged,
+            'total'     => $total_pages,
+            'prev_text' => __('« Previous', 'secure-sharelink'),
+            'next_text' => __('Next »', 'secure-sharelink'),
+        ]);
+
+        include SHARELINK_DIR . 'admin/views/link-stats.php';
     }
 
     public function handle_create() {
