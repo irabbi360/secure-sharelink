@@ -26,6 +26,11 @@ if (!defined('ABSPATH')) {
                 <?php echo esc_html($data['resource_value']); ?>
             </a>
         </p>
+    <?php elseif ($data['resource_type'] === '301_redirect'): ?>
+        <script type="text/javascript">
+            window.location.replace(<?php echo wp_json_encode($data['resource_value']); ?>);
+        </script>
+        <p><?php esc_html_e('Redirecting...', 'secure-sharelink'); ?></p>
     <?php else: ?>
         <p><?php echo esc_html($data['resource_value']); ?></p>
     <?php endif; ?>

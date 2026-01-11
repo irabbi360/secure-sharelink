@@ -9,13 +9,23 @@ class ShareLink_Access
 
     public function handle_request()
     {
-        if (isset($_GET['sharelink'])) {
-            if (!sanitize_text_field(wp_unslash($_GET['sharelink'])) !== null && !!wp_verify_nonce(sanitize_text_field(wp_unslash($_GET['sharelink'])))) {
-                // If the nonce is not present, bail out.
-                wp_die(esc_html__('Security check failed. Nonce is missing.', 'secure-sharelink'));
+        // Get the sharelink token from query var
+        $token = get_query_var('sharelink', false);
+        
+        // Fallback: Parse from REQUEST_URI if rewrite rule didn't work
+        if (!$token && isset($_SERVER['REQUEST_URI'])) {
+            $request_uri = sanitize_text_field(wp_unslash($_SERVER['REQUEST_URI']));
+            if (preg_match('#/shareurl/([a-zA-Z0-9_-]+)/?$#', $request_uri, $matches)) {
+                $token = $matches[1];
             }
-            // Sanitize GET input
-            $token = sanitize_text_field(wp_unslash($_GET['sharelink']));
+        }
+        
+        // Debug: Log what we're receiving
+        error_log('ShareLink handle_request called. Token: ' . var_export($token, true));
+        
+        if ($token !== false && !empty($token)) {
+            // Sanitize token
+            $token = sanitize_text_field($token);
             $manager = new ShareLink_Manager();
             $data = $manager->get_link($token);
 
@@ -103,6 +113,13 @@ class ShareLink_Access
 
             // Log successful access
             ShareLink_Logger::log($data['id'], $token, 'success');
+
+            // Handle 301 redirect - do this before any output
+            if ($data['resource_type'] === '301_redirect') {
+                status_header(301);
+                header('Location: ' . esc_url_raw($data['resource_value']));
+                exit;
+            }
 
             // Output the resource
             get_header();

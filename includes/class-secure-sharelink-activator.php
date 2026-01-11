@@ -34,5 +34,8 @@ class ShareLink_Activator {
         ) $charset_collate;";
 
         dbDelta($sql_logs);
+        
+        // Flush rewrite rules to activate custom rewrite rules
+        flush_rewrite_rules();
     }
 }

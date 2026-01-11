@@ -17,7 +17,9 @@ class ShareLink_Manager {
     public function create_link($resource_type, $resource_value, $args = []) {
         global $wpdb;
 
-        $token = $this->generate_token();
+        // Use custom token if provided, otherwise generate one
+        $token = isset($args['custom_token']) && !empty($args['custom_token']) ? $args['custom_token'] : $this->generate_token();
+        
         $data = [
             'token'             => $token,
             'resource_type'     => $resource_type,
@@ -32,7 +34,7 @@ class ShareLink_Manager {
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
         $wpdb->insert($this->table, $data);
 
-        return site_url("shareurl?sharelink={$token}");
+        return site_url("shareurl/{$token}");
     }
 
     public function validate_link($token, $password = null) {

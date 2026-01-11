@@ -97,7 +97,7 @@ class ShareLink_Admin {
 
         // Resource type validation
         $resource_type = sanitize_text_field(!empty(wp_unslash($_POST['resource_type'])) ? wp_unslash($_POST['resource_type']) : '');
-        $valid_types = ['file', 'url', 'data'];
+        $valid_types = ['file', 'url', 'data', '301_redirect'];
         if (!in_array($resource_type, $valid_types, true)) {
             $errors[] = "Invalid resource type.";
         }
@@ -149,6 +149,27 @@ class ShareLink_Admin {
         // Burn after reading
         $burn_after_reading = isset($_POST['burn_after_reading']) ? 1 : 0;
 
+        // Custom token validation (optional)
+        $custom_token = '';
+        if (!empty($_POST['custom_token'])) {
+            $custom_token = sanitize_text_field(wp_unslash($_POST['custom_token']));
+            
+            // Validate custom token: alphanumeric only, min 3 chars
+            if (!preg_match('/^[a-zA-Z0-9-_]{3,64}$/', $custom_token)) {
+                $errors[] = "Custom token must be 3-64 characters and contain only letters, numbers, hyphens, and underscores.";
+            }
+            
+            // Check if custom token already exists
+            global $wpdb;
+            $existing = $wpdb->get_var($wpdb->prepare(
+                "SELECT id FROM {$wpdb->prefix}secure_sharelinks WHERE token = %s",
+                $custom_token
+            ));
+            if ($existing) {
+                $errors[] = "This URL Slug is already in use. Please choose a different one.";
+            }
+        }
+
         // If errors, redirect back with messages and nonce
         if (!empty($errors)) {
             $redirect_url = add_query_arg([
@@ -169,6 +190,7 @@ class ShareLink_Admin {
             'max_uses'           => $max_uses,
             'expires_at'         => $expires_at,
             'burn_after_reading' => $burn_after_reading,
+            'custom_token'       => $custom_token,
         ]);
 
         // Redirect on success

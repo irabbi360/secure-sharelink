@@ -38,6 +38,7 @@ if (
                         <option value="file">File</option>
                         <option value="url">URL</option>
                         <option value="data">Data</option>
+                        <option value="301_redirect">301 Redirect</option>
                     </select>
                 </td>
             </tr>
@@ -46,6 +47,13 @@ if (
                 <td>
                     <input type="text" id="resource_value" name="resource_value" class="regular-text" placeholder="/wp-content/uploads/file.pdf">
                     <button type="button" class="button select-file">Select from Media</button>
+                </td>
+            </tr>
+            <tr>
+                <th>Custom URL Slug (Optional)</th>
+                <td>
+                    <input type="text" name="custom_token" class="regular-text" placeholder="leave blank to auto-generate">
+                    <p style="font-size: 12px; color: #666;">Alphanumeric characters only. Must be unique.</p>
                 </td>
             </tr>
 

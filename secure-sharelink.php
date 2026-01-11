@@ -3,7 +3,7 @@
  * Plugin Name:       Secure ShareLink
  * Plugin URI:        https://github.com/irabbi360/secure-sharelink/
  * Description:       Generate secure, time-limited sharing links with auditing, password protection, and advanced security.
- * Version:           1.0.0
+ * Version:           1.1.0
  * Requires at least: 5.2
  * Requires PHP:      7.2
  * Author:            Fazle Rabbi
@@ -45,14 +45,13 @@ function sharelink_init() {
 }
 add_action( 'plugins_loaded', 'sharelink_init' );
 
-// Add custom rewrite endpoint /shareurl
-add_action('init', function () {
-    add_rewrite_rule('^shareurl?', 'index.php?shareurl=1', 'top');
-    add_rewrite_tag('%sharelink%', '([^&]+)');
-});
-
+// Register query vars first
 add_filter('query_vars', function ($vars) {
-    $vars[] = 'shareurl';
     $vars[] = 'sharelink';
     return $vars;
 });
+
+// Add custom rewrite rule
+add_action('init', function () {
+    add_rewrite_rule('^shareurl/([a-zA-Z0-9_-]+)/?$', 'index.php?sharelink=$1', 'top');
+}, 10, 0);
