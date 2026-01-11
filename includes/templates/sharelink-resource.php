@@ -15,11 +15,15 @@ if (!defined('ABSPATH')) {
     <h2><?php esc_html_e('Shared Resource', 'secure-sharelink'); ?></h2>
 
     <?php if ($data['resource_type'] === 'file'): ?>
-        <p>
-            <a href="<?php echo esc_url($data['resource_value']); ?>" download>
-                <?php esc_html_e('Download File', 'secure-sharelink'); ?>
-            </a>
-        </p>
+    <p>
+        <button
+            id="sharelink-download"
+            class="sharelink-download-btn"
+            data-file-url="<?php echo esc_url($data['resource_value']); ?>"
+            style="padding:10px 20px;font-size:16px;cursor:pointer;background:#0073aa;color:#fff;border:none;border-radius:4px;">
+            <?php esc_html_e('Download File', 'secure-sharelink'); ?>
+        </button>
+    </p>
     <?php elseif ($data['resource_type'] === 'url'): ?>
         <p>
             <a href="<?php echo esc_url($data['resource_value']); ?>" target="_blank">

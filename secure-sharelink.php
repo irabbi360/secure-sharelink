@@ -45,6 +45,26 @@ function sharelink_init() {
 }
 add_action( 'plugins_loaded', 'sharelink_init' );
 
+// Enqueue frontend scripts
+function sharelink_enqueue_frontend_scripts() {
+    wp_enqueue_script(
+        'secure-sharelink',
+        SHARELINK_URL . 'assets/js/secure-sharelink.js',
+        array(),
+        SHARELINK_VERSION,
+        true
+    );
+
+    wp_localize_script(
+        'secure-sharelink',
+        'shareLinkDownloadL10n',
+        array(
+            'message' => esc_js(__('Your download will start shortly.', 'secure-sharelink'))
+        )
+    );
+}
+add_action( 'wp_enqueue_scripts', 'sharelink_enqueue_frontend_scripts' );
+
 // Register query vars first
 add_filter('query_vars', function ($vars) {
     $vars[] = 'sharelink';
